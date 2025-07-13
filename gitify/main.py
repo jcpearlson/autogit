@@ -1,5 +1,6 @@
 import argparse
 
+from gitify.__init__ import defaultModel
 from gitify.config import get_api_key, get_model, set_config
 from gitify.llm import generate_commit_message
 from gitify.utils import get_git_diff, run_git_commit
@@ -31,7 +32,7 @@ def main():
                              required=True,
                              help='Your OpenAI API key.')
   config_parser.add_argument('--model',
-                             default='gpt-4.1',
+                             default=defaultModel,
                              help='LLM model to use (default: gpt-4).')
   args = parser.parse_args()
 

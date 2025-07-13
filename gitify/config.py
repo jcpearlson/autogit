@@ -2,6 +2,8 @@ import json
 import os
 from pathlib import Path
 
+from gitify.__init__ import defaultModel
+
 CONFIG_FILE = Path.home() / '.gitifyconfig'
 
 
@@ -26,8 +28,7 @@ def get_api_key():
 
 def get_model():
   config = get_config()
-  # TODO: check if this .get checks model and defaults to gpt-4 or what it is doing
-  return config.get('model', 'gpt-4')
+  return config.get('model', defaultModel)
 
 
 def set_config(api_key, model):

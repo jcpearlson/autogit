@@ -1,7 +1,9 @@
 from openai import OpenAI
 
+from gitify.__init__ import defaultModel
 
-def generate_commit_message(diff_text, api_key, model='gpt-4'):
+
+def generate_commit_message(diff_text, api_key, model=defaultModel):
   client = OpenAI(api_key=api_key)
   systemPrompt = """
   You are a helpful assistant that writes Git commit messages.
@@ -12,6 +14,7 @@ def generate_commit_message(diff_text, api_key, model='gpt-4'):
   - Output **only** the commit message.
 
   """
+
   userPrompt = f"Git diff:\n\n{diff_text}"
 
   response = client.chat.completions.create(model=model,
@@ -22,7 +25,7 @@ def generate_commit_message(diff_text, api_key, model='gpt-4'):
                                                 "role": "user",
                                                 "content": userPrompt
                                             }],
-                                            temperature=0.6,
+                                            temperature=0.4,
                                             max_tokens=300)
 
   return response.choices[0].message.content.strip()
