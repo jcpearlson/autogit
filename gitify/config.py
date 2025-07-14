@@ -31,5 +31,7 @@ def get_model():
   return config.get('model', DEFAULT_MODEL)
 
 
+# TODO: this should be more like you set a api key for a model providor and can select model from there
+# also idealy you can store multiple api keys for mulitple model providors
 def set_config(api_key, model):
   save_config({'api_key': api_key, 'model': model})

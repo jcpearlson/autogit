@@ -1,8 +1,8 @@
 import argparse
 
-from gitify.__init__ import DEFAULT_MODEL
+from gitify.__init__ import DEFAULT_MODEL, MODEL_INPUT_COST
 from gitify.config import get_api_key, get_model, set_config
-from gitify.llm import generate_commit_message
+from gitify.llm import generate_commit_message, get_tokens_cost
 from gitify.utils import get_git_diff, run_git_commit
 
 
@@ -60,6 +60,11 @@ def main():
     commit_message = generate_commit_message(diff, api_key, model)
     # TODO: Here I want it to be more like normal github where you actually view and can edit the message before confirming it then it gets commited.
     print(f"\nGenerated commit message:\n{commit_message}\n")
+
+    if model in MODEL_INPUT_COST:
+      # TODO: should not really display this cost unless it is greater than a cent!
+      total_cost = get_tokens_cost(diff, model)
+      print(f"Estimated Cost: ~${total_cost}\n")
 
     while True:
       confirm = input(
