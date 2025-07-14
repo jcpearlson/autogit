@@ -64,7 +64,12 @@ def main():
     if model in MODEL_INPUT_COST:
       # TODO: should not really display this cost unless it is greater than a cent!
       total_cost = get_tokens_cost(diff, model)
-      print(f"Estimated Cost: ~${total_cost}\n")
+      if total_cost < 0.01:
+        total_cost = '~ < $0.01'
+      else:
+        total_cost = '~ $' + str(total_cost)
+
+      print("Estimated Cost: " + total_cost + "\n")
 
     while True:
       confirm = input(

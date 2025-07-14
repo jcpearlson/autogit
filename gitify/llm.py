@@ -7,8 +7,8 @@ from gitify.__init__ import (DEFAULT_MODEL, MODEL_INPUT_COST, SYSTEM_PROMPT,
 
 def get_tokens_cost(diff_text, model):
   tokens = get_tokens_length(diff_text, model)
-  model_cost = MODEL_INPUT_COST[model] / 1e6
-  total_cost = round(model_cost * tokens, 2)
+  model_cost_per_token = MODEL_INPUT_COST[model] / 1e6
+  total_cost = round(model_cost_per_token * tokens, 3)
 
   return total_cost
 
