@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from gitify.__init__ import defaultModel
+from gitify.__init__ import DEFAULT_MODEL
 
 CONFIG_FILE = Path.home() / '.gitifyconfig'
 
@@ -28,7 +28,7 @@ def get_api_key():
 
 def get_model():
   config = get_config()
-  return config.get('model', defaultModel)
+  return config.get('model', DEFAULT_MODEL)
 
 
 def set_config(api_key, model):

@@ -1,29 +1,32 @@
+import tiktoken
 from openai import OpenAI
 
-from gitify.__init__ import defaultModel
+from gitify.__init__ import DEFAULT_MODEL, SYSTEM_PROMPT, SYSTEM_PROMPT_LENGTH
+
+#TODO: create a get_tokens_cost method here so
 
 
-def generate_commit_message(diff_text, api_key, model=defaultModel):
+def get_tokens_length(diff_text, model):
+  encoding = tiktoken.encode_for_model(model)
+
+  user_prompt = f"Git diff:\n\n{diff_text}"
+  tokens = encoding.encode(user_prompt)
+
+  return len(tokens) + SYSTEM_PROMPT_LENGTH
+
+
+def generate_commit_message(diff_text, api_key, model=DEFAULT_MODEL):
   client = OpenAI(api_key=api_key)
-  systemPrompt = """
-  You are a helpful assistant that writes Git commit messages.
 
-  Write a **concise and descriptive** Git commit message (in imperative mood, like "Fix bug", "Add feature") based on the following Git diff. Focus on summarizing the **purpose and effect** of the changes, not implementation details.
-
-  - Limit to **a single sentence** per significant change made.
-  - Output **only** the commit message.
-
-  """
-
-  userPrompt = f"Git diff:\n\n{diff_text}"
+  user_prompt = f"Git diff:\n\n{diff_text}"
 
   response = client.chat.completions.create(model=model,
                                             messages=[{
                                                 "role": "system",
-                                                "content": systemPrompt
+                                                "content": SYSTEM_PROMPT
                                             }, {
                                                 "role": "user",
-                                                "content": userPrompt
+                                                "content": user_prompt
                                             }],
                                             temperature=0.4,
                                             max_tokens=300)

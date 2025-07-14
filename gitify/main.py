@@ -1,6 +1,6 @@
 import argparse
 
-from gitify.__init__ import defaultModel
+from gitify.__init__ import DEFAULT_MODEL
 from gitify.config import get_api_key, get_model, set_config
 from gitify.llm import generate_commit_message
 from gitify.utils import get_git_diff, run_git_commit
@@ -32,7 +32,7 @@ def main():
                              required=True,
                              help='Your OpenAI API key.')
   config_parser.add_argument('--model',
-                             default=defaultModel,
+                             default=DEFAULT_MODEL,
                              help='LLM model to use (default: gpt-4).')
   args = parser.parse_args()
 
@@ -46,6 +46,11 @@ def main():
     model = get_model()
     diff = get_git_diff()
 
+    if not api_key.strip():
+      print(
+          " Please configure an API key before use using gitify config --api_key"
+      )
+
     if not diff.strip():
       print(
           "⚠️  No staged changes found. Please stage files using `git add` before running gitify."
@@ -54,7 +59,7 @@ def main():
 
     commit_message = generate_commit_message(diff, api_key, model)
     # TODO: Here I want it to be more like normal github where you actually view and can edit the message before confirming it then it gets commited.
-    print(f"\nGenerated commit message:\n> {commit_message}\n")
+    print(f"\nGenerated commit message:\n{commit_message}\n")
 
     while True:
       confirm = input(
