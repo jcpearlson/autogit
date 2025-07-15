@@ -3,7 +3,7 @@ import argparse
 from gitify.__init__ import DEFAULT_MODEL, MODEL_INPUT_COST
 from gitify.config import get_api_key, get_model, set_config
 from gitify.llm import generate_commit_message, get_tokens_cost
-from gitify.utils import get_git_diff, run_git_commit
+from gitify.utils import get_git_diff, open_editor_with_content, run_git_commit
 
 
 def main():
@@ -42,6 +42,8 @@ def main():
     return
 
   elif args.command == 'commit':
+    #TODO: add a flag to commit where the user can choose to skip all prompts and just auto commit whatever message it generates
+    #TODO: add a flag that bypasses confirms but still allows the user to view and edit the message before commit
     api_key = get_api_key()
     model = get_model()
     diff = get_git_diff()
@@ -57,19 +59,39 @@ def main():
       )
       return
 
-    commit_message = generate_commit_message(diff, api_key, model)
-    # TODO: Here I want it to be more like normal github where you actually view and can edit the message before confirming it then it gets commited.
-    print(f"\nGenerated commit message:\n{commit_message}\n")
-
+    #  Generate a cost estimation for the operation
     if model in MODEL_INPUT_COST:
-      # TODO: should not really display this cost unless it is greater than a cent!
       total_cost = get_tokens_cost(diff, model)
+      float_total_cost = float(total_cost)
+
       if total_cost < 0.01:
         total_cost = '~ < $0.01'
       else:
         total_cost = '~ $' + str(total_cost)
 
       print("Estimated Cost: " + total_cost + "\n")
+
+      # NOTE: if total cost is greater than 10 cents we will reprompt the user for cost
+      if float_total_cost >= 0.1:
+        while True:
+          confirm = input("Generate commit message? [y/n]: ").strip().lower()
+          if confirm == 'y':
+            break
+          elif confirm == 'n':
+            print('Aborting operation.')
+            return
+          else:
+            print("Please type 'y' or 'n'.")
+    else:
+      print('No cost estimation could be found for this model type.')
+      # TODO: This operation will take x tokens please confirm ext or figure out how to handle this case
+
+    commit_message = generate_commit_message(diff, api_key, model)
+
+    # NOTE: Allows user to view commit message and make any changes before saving
+    commit_message = open_editor_with_content(commit_message)
+
+    print(f"Final commit message:\n\n{commit_message}\n")
 
     while True:
       confirm = input(
@@ -80,6 +102,6 @@ def main():
         break
       elif confirm == 'n':
         print("❌ Commit cancelled.")
-        break
+        return
       else:
         print("Please type 'y' or 'n'.")
