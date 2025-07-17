@@ -69,7 +69,7 @@ def main():
       else:
         total_cost = '~ $' + str(total_cost)
 
-      print("Estimated Cost: " + total_cost + "\n")
+      print("Estimated cost: " + total_cost + "\n")
 
       # NOTE: if total cost is greater than 10 cents we will reprompt the user for cost
       if float_total_cost >= 0.1:
@@ -98,7 +98,7 @@ def main():
           "Do you want to commit with this message? [y/n]: ").strip().lower()
       if confirm == 'y':
         run_git_commit(commit_message)
-        print("✅ Commit created.")
+        print("✅ Commit created.\n")
         break
       elif confirm == 'n':
         print("❌ Commit cancelled.")

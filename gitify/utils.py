@@ -28,7 +28,10 @@ def open_editor_with_content(initial_content="") -> str:
                                    delete=False,
                                    mode="w+",
                                    encoding="utf-8") as tf:
-    tf.write(initial_content)
+    HEADER = "# Generated commit message is below. Make any changes then save the file. \n# Any lines starting with '#' will not be included in the commit message.\n\n"
+
+    total_content = HEADER + initial_content.strip()
+    tf.write(total_content)
     tf.flush()
     temp_path = tf.name
 
@@ -40,8 +43,13 @@ def open_editor_with_content(initial_content="") -> str:
     raise FileNotFoundError(f"Editor '{editor}' could not be launched.")
 
   with open(temp_path, "r", encoding="utf-8") as tf:
-    edited_content = tf.read()
+    edited_content = "".join(line for line in tf
+                             if not line.lstrip().startswith('#'))
+
+  edited_content = edited_content.strip()
+  if edited_content == "":
+    raise ValueError("Can not have a commit message that is empty.")
 
   os.remove(temp_path)
 
-  return edited_content.strip()
+  return edited_content
