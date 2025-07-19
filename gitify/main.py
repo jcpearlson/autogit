@@ -101,6 +101,7 @@ def main():
     # NOTE: view and make changes to message
     commit_message = open_editor_with_content(commit_message)
 
+    print(commit_message + "\n")
     # NOTE: final confirm before commit
     CONFIRM_COMMIT_MESSAGE = "Do you want to commit with this message?"
     if confirm_operation(CONFIRM_COMMIT_MESSAGE):

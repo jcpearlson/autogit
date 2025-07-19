@@ -18,8 +18,6 @@ def get_tokens_length(diff_text, model):
     encoding = tiktoken.encoding_for_model('gpt-4')
     diff_prompt = f"Git diff:\n\n{diff_text}"
     diff_tokens = len(encoding.encode(diff_prompt))
-    # FIX: remove this when confirm it works
-    print('used tiktoken! REMOVE ME!!!! llm.py::24')
   else:
     diff_tokens = len(diff_text) / 4
 
