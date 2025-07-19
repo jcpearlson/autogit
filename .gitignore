@@ -1,5 +1,0 @@
-.gitignore
-uv.lock
-gitify.egg-info/
-.venv/
-*.pyc
