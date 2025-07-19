@@ -14,12 +14,16 @@ def get_tokens_cost(diff_text, model):
 
 
 def get_tokens_length(diff_text, model):
-  encoding = tiktoken.encoding_for_model(
-      'gpt-4'
-  )  # TODO: fix this here from gpt-4 to search for model if family gpt then gpt-4 else just chars()/4 for token estimation
-  user_prompt = f"Git diff:\n\n{diff_text}"
-  tokens = encoding.encode(user_prompt)
-  total_tokens = len(tokens) + SYSTEM_PROMPT_LENGTH
+  if 'gpt' in model:
+    encoding = tiktoken.encoding_for_model('gpt-4')
+    diff_prompt = f"Git diff:\n\n{diff_text}"
+    diff_tokens = len(encoding.encode(diff_prompt))
+    # FIX: remove this when confirm it works
+    print('used tiktoken! REMOVE ME!!!! llm.py::24')
+  else:
+    diff_tokens = len(diff_text) / 4
+
+  total_tokens = diff_tokens + SYSTEM_PROMPT_LENGTH
 
   return total_tokens
 

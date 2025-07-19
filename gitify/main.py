@@ -2,8 +2,10 @@ import argparse
 
 from gitify.__init__ import DEFAULT_MODEL, MODEL_INPUT_COST
 from gitify.config import get_api_key, get_model, set_config
-from gitify.llm import generate_commit_message, get_tokens_cost
-from gitify.utils import get_git_diff, open_editor_with_content, run_git_commit
+from gitify.llm import (generate_commit_message, get_tokens_cost,
+                        get_tokens_length)
+from gitify.utils import (confirm_operation, get_git_diff,
+                          open_editor_with_content, run_git_commit)
 
 
 def main():
@@ -21,6 +23,9 @@ def main():
       description=
       'Use this command after staging your changes to auto-generate a commit message using GPT.'
   )
+  commit_parser.add_argument('--no_confirm',
+                             action='store_true',
+                             help='Bypass all confirmation prompts')
 
   config_parser = subparsers.add_parser(
       'config',
@@ -37,31 +42,36 @@ def main():
   args = parser.parse_args()
 
   if args.command == 'config':
+    # TODO: this method needs much more error handling around the input of args.api_key and args.model int terms of them being valid
     set_config(args.api_key, args.model)
     print("✅ Configuration saved.")
     return
 
   elif args.command == 'commit':
-    #TODO: add a flag to commit where the user can choose to skip all prompts and just auto commit whatever message it generates
-    #TODO: add a flag that bypasses confirms but still allows the user to view and edit the message before commit
     api_key = get_api_key()
     model = get_model()
-    diff = get_git_diff()
+    git_diff_text = get_git_diff()
 
     if not api_key.strip():
       print(
           " Please configure an API key before use using gitify config --api_key"
       )
 
-    if not diff.strip():
+    if not git_diff_text.strip():
       print(
           "⚠️  No staged changes found. Please stage files using `git add` before running gitify."
       )
       return
 
+    if args.no_confirm:
+      commit_message = generate_commit_message(git_diff_text, api_key, model)
+      run_git_commit(commit_message.strip())
+      print("✅ Commit created.\n")
+      return
+
     #  Generate a cost estimation for the operation
     if model in MODEL_INPUT_COST:
-      total_cost = get_tokens_cost(diff, model)
+      total_cost = get_tokens_cost(git_diff_text, model)
       float_total_cost = float(total_cost)
 
       if total_cost < 0.01:
@@ -71,37 +81,30 @@ def main():
 
       print("Estimated cost: " + total_cost + "\n")
 
-      # NOTE: if total cost is greater than 10 cents we will reprompt the user for cost
-      if float_total_cost >= 0.1:
-        while True:
-          confirm = input("Generate commit message? [y/n]: ").strip().lower()
-          if confirm == 'y':
-            break
-          elif confirm == 'n':
-            print('Aborting operation.')
-            return
-          else:
-            print("Please type 'y' or 'n'.")
+      if float_total_cost >= 0.1:  # NOTE: confirm if 10 cents or greater in cost
+        if not confirm_operation(message="Generate commit message?"):
+          print("Aborting operation.")
+          return
     else:
-      print('No cost estimation could be found for this model type.')
-      # TODO: This operation will take x tokens please confirm ext or figure out how to handle this case
+      # Model is not in MODEL_INPUT_COST
+      total_token_length = get_tokens_length(git_diff_text, model)
 
-    commit_message = generate_commit_message(diff, api_key, model)
+      print("Estimated tokens: ~ " + str(total_token_length) + "\n")
 
-    # NOTE: Allows user to view commit message and make any changes before saving
+      if total_token_length > 50_000:  # NOTE: confirm if 50k tokens or greater
+        if not confirm_operation(message="Generate commit message?"):
+          print("Aborting operation.")
+          return
+
+    commit_message = generate_commit_message(git_diff_text, api_key, model)
+
+    # NOTE: view and make changes to message
     commit_message = open_editor_with_content(commit_message)
 
-    print(f"Final commit message:\n\n{commit_message}\n")
-
-    while True:
-      confirm = input(
-          "Do you want to commit with this message? [y/n]: ").strip().lower()
-      if confirm == 'y':
-        run_git_commit(commit_message)
-        print("✅ Commit created.\n")
-        break
-      elif confirm == 'n':
-        print("❌ Commit cancelled.")
-        return
-      else:
-        print("Please type 'y' or 'n'.")
+    # NOTE: final confirm before commit
+    CONFIRM_COMMIT_MESSAGE = "Do you want to commit with this message?"
+    if confirm_operation(CONFIRM_COMMIT_MESSAGE):
+      run_git_commit(commit_message)
+      print("✅ Commit created.")
+    else:
+      print("❌ Commit cancelled.")

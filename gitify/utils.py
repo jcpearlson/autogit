@@ -53,3 +53,14 @@ def open_editor_with_content(initial_content="") -> str:
   os.remove(temp_path)
 
   return edited_content
+
+
+def confirm_operation(message) -> bool:
+  while True:
+    confirm = input(message + " [y/n]: ").strip().lower()
+    if confirm == "y":
+      return True
+    elif confirm == "n":
+      return False
+    else:
+      print("Please type 'y or 'n'.")
